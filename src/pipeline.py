@@ -95,12 +95,22 @@ def pipeline(project_data_dict):
 
 
 def _pipeline(company):
-    import multiprocessing
+    import concurrent.futures
+    import os
+    from src.retry_utils import retry_with_backoff
+    
+    # 指定进程数量（例如：使用CPU核心数的一半）
+    cpu_count = os.cpu_count()
+    max_workers = max(1, cpu_count // 2)
+    print(f'cpu_count : {cpu_count}')
+    
+    # 创建带重试机制的项目处理函数
+    process_with_retry = retry_with_backoff(max_retries=5)(process_one_project)
     
     # 使用多进程并行处理项目
     project_reports = []
-    with multiprocessing.Pool() as pool:
-        project_reports = pool.map(process_one_project, company.projects)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        project_reports = list(executor.map(process_with_retry, company.projects))
 
     return project_reports
 

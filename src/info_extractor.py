@@ -76,6 +76,7 @@ def extract_info(text: str) -> Company:
     
     # 解析JSON响应
     try:
+        response = response.strip(' `json').replace('\n', '')
         result = json.loads(response)
         
         # 创建Company实例
@@ -102,6 +103,7 @@ def extract_info(text: str) -> Company:
         # 如果解析失败，返回一个包含错误信息的Company实例
         company = Company(name="")
         # 可以在这里添加错误信息到company的某个字段
+        print(f"JSON解析错误: {str(e)}")
         return company
 
 

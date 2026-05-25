@@ -37,6 +37,8 @@ def generate_project_report(
     # 解析响应为结构化数据
     import json
     try:
+        response = response.strip(' `json').replace('\n', '')
+        # result = json.loads(response)
         structured_data = json.loads(response)
     except json.JSONDecodeError:
         # 如果解析失败，返回原始响应
@@ -74,6 +76,7 @@ def generate_project_notification(
     # 解析响应为结构化数据
     import json
     try:
+        response = response.strip(' `json').replace('\n', '')
         structured_data = json.loads(response)
     except json.JSONDecodeError:
         # 如果解析失败，返回原始响应
@@ -122,6 +125,7 @@ def generate_project_acceptance_report(
     # 解析响应为结构化数据
     import json
     try:
+        response = response.strip(' `json').replace('\n', '')
         structured_data = json.loads(response)
     except json.JSONDecodeError:
         # 如果解析失败，返回原始响应

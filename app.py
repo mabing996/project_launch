@@ -12,17 +12,17 @@ if 'user_input' not in st.session_state:
 
 
 st.set_page_config(
-    page_title="项目文档处理系统",
+    page_title="xxx",
     page_icon="📄",
     layout="wide"
 )
 
-st.title("📄 项目文档处理系统")
+st.title("信息门户")
 
 st.markdown("---")
 
-st.subheader("AI助手")
-st.write("在这里输入您的问题，AI助手将为您提供帮助")
+# st.subheader("AI助手")
+st.write("在这里输入您的信息")
 
 # 使用session_state保存用户输入
 user_input = st.text_area(
@@ -38,7 +38,7 @@ user_input = st.text_area(
 solver = Solver()
 if st.button("发送", key="send_button"):
     if user_input.strip():
-        with st.spinner("AI正在思考中..."):
+        with st.spinner("加载..."):
             try:
                 current_id = solver.text_preprocess(user_input)
                 project_data = solver.get_project_data(current_id)
@@ -194,14 +194,14 @@ if st.session_state.project_data:
 
 
             st.markdown("---")
-            st.markdown("### AI回答")
+            # st.markdown("### AI回答")
             # response = project_data.generate_project_report()
-            st.write(res_path)
+            st.markdown(f"项目报告已生成！！！！！！")
 
 st.markdown("---")
-st.markdown("### 使用说明")
-st.markdown("""
-1. 在上方输入框中输入您的问题
-2. 点击"发送"按钮
-3. 等待AI助手回答您的问题
-""")
+# st.markdown("### 使用说明")
+# st.markdown("""
+# 1. 在上方输入框中输入您的问题
+# 2. 点击"发送"按钮
+# 3. 等待AI助手回答您的问题
+# """)

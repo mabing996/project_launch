@@ -22,7 +22,9 @@ def get_client() -> OpenAI:
 
 def call_llm(
     prompt: str,
-    model: str = "doubao-seed-2-0-pro-260215",
+    # model: str = "doubao-seed-2-0-pro-260215",
+    # model: str = "glm-4-7-251222",
+    model: str = "doubao-seed-1-8-251228",
     messages: Optional[List[Dict[str, Any]]] = None
 ) -> Any:
     """
@@ -37,6 +39,8 @@ def call_llm(
         模型响应对象
     """
     # 内部创建client
+    # 使用蓝色输出LLM调用信息
+    print(f'\033[34mcall_llm model: {model}, prompt: {prompt}\033[0m')
     client = get_client()
     
     if messages is None:
@@ -57,6 +61,8 @@ def call_llm(
         input=messages
     )
     text = response.output_text
+
+    print(f'\033[32mcall_llm model: {model}, text: {text}\033[0m')
     return text
 
 
