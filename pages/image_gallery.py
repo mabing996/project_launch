@@ -39,7 +39,10 @@ def get_images():
     for ext in SUPPORTED_FORMATS:
         images.extend(glob.glob(os.path.join(IMAGES_DIR, f'*{ext}')))
         images.extend(glob.glob(os.path.join(IMAGES_DIR, f'*{ext.upper()}')))
-    return sorted(images)
+    
+    # 按修改时间倒序排序（最新的在前）
+    images.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+    return images
 
 # 加载图片数据
 @st.cache_resource
@@ -233,42 +236,5 @@ st.caption("💡 提示：使用侧边栏控制面板可以调整显示模式和
 
 # 添加图片上传功能
 st.markdown("---")
-st.header("📤 上传新图片")
 
-uploaded_files = st.file_uploader(
-    "选择图片文件上传",
-    type=['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'heic'],
-    accept_multiple_files=True,
-    help="支持多种图片格式，包括 HEIC 格式"
-)
-
-if uploaded_files:
-    upload_count = 0
-    for uploaded_file in uploaded_files:
-        try:
-            # 生成唯一的文件名（使用时间戳）
-            import time
-            timestamp = int(time.time() * 1000)
-            file_ext = os.path.splitext(uploaded_file.name)[1]
-            new_filename = f"IMG_{timestamp}{file_ext}"
-            save_path = os.path.join(IMAGES_DIR, new_filename)
-            
-            # 保存文件
-            with open(save_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-            
-            upload_count += 1
-            st.success(f"✅ 已保存：{new_filename}")
-            
-        except Exception as e:
-            st.error(f"❌ 保存失败 {uploaded_file.name}: {str(e)}")
-    
-    if upload_count > 0:
-        st.info(f"🎉 成功上传 {upload_count} 张图片")
-        # 提示用户刷新页面查看新图片
-        if st.button("🔄 刷新页面查看新图片"):
-            st.rerun()
-
-# 最近上传的图片预览
-st.markdown("---")
 
