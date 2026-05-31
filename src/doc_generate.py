@@ -26,11 +26,24 @@ def generate_project_report(
         生成的立项报告结构化数据
     """
     # 构建prompt，强调专利成果
-    prompt = PROJECT_REPORT_PROMPT % (REFERENCE_REPORT, project.company.name, "", "", project.name, project.start_date, project.end_date, "")
+    # prompt = PROJECT_REPORT_PROMPT % (REFERENCE_REPORT,
+    #                              project.company.name,
+    #                              "", 
+    #                              "", 
+    #                              project.name, 
+    #                              project.start_date,
+    #                               project.end_date, 
+    #                               "")
     # 在prompt中添加专利成果强调
+    prompt = PROJECT_REPORT_PROMPT.replace("{company_name}", project.company.name)
+    prompt = prompt.replace("{project_name}", project.name)
+    prompt = prompt.replace("{core_technologies}", project.intellectual_property)
+    prompt = prompt.replace("{example}", REFERENCE_REPORT)
+
     prompt = f"{prompt}\n\n特别注意：请在报告中重点体现项目的专利成果，包括以下专利详细信息：\n{project.patent_info}\n请重点突出专利成果的技术价值和创新点，但不要直接引用名字。"\
-             f"内容不要包含专利名称或编号，也不准包含日期"
-    
+             f"内容不要包含专利名称或编号，也不准包含日期"\
+             f"注意因果，专利成果是该项目的产出，所以你不能说‘根据公司现有技术’"\
+             f"内容量与模版相当。"
     # 调用LLM生成报告
     response = call_llm(prompt)
     
@@ -65,10 +78,17 @@ def generate_project_notification(
     project_team = project.team_members if project.team_members else []
     
     # 构建prompt，强调专利成果
-    prompt = PROJECT_NOTIFICATION_PROMPT % (project.company.name, project.name, "", ", ".join(project_team), project.start_date, project.end_date, "", "", project.project_id)
+    # prompt = PROJECT_NOTIFICATION_PROMPT % (project.company.name, project.name, "", ", ".join(project_team), project.start_date, project.end_date, "", "", project.project_id)
+
+    prompt = PROJECT_NOTIFICATION_PROMPT.replace("{company_name}", project.company.name)
+    prompt = prompt.replace("{project_name}", project.name)
+    prompt = prompt.replace("{core_technologies}", project.intellectual_property)
+
     # 在prompt中添加专利成果强调
-    prompt = f"{prompt}\n\n特别注意：请在通知中提及项目的专利成果，包括以下专利详细信息：\n{project.patent_info}\n请重点突出专利成果的技术价值和创新点，但不要直接引用名字。"\
-             f"内容不要包含专利名称或编号，也不准包含日期"
+    prompt = f"{prompt}\n\n特别注意：该项目产出了如下知识产权成果，专利详细信息有：\n{project.patent_info}\n请重点突出专利成果的技术价值和创新点，但不要直接引用名字。"\
+             f"内容不要包含专利名称或编号，也不准包含日期"\
+             f"注意因果，专利成果是该项目的产出，所以你不能说‘根据公司现有技术’"\
+             f"内容量与模版相当。"
     
     # 调用LLM生成通知
     response = call_llm(prompt)
@@ -102,22 +122,25 @@ def generate_project_acceptance_report(
     acceptance_contents = []
     
     # 构建prompt，强调专利成果
-    prompt = PROJECT_ACCEPTANCE_PROMPT % (
-        project.company.name, 
-        project.name, 
-        "", 
-        project.start_date, 
-        project.end_date, 
-        "", 
-        f"项目形成了{project.intellectual_property}等专利成果", 
-        "\n".join(core_technologies), 
-        "\n".join(innovations), 
-        "\n".join(acceptance_contents), 
-        "经过全面测试与评估，项目已完成既定研发任务，相关成果达到预期技术指标，具备实际应用价值。项目顺利通过验收。"
-    )
+    # prompt = PROJECT_ACCEPTANCE_PROMPT % (
+    #     project.company.name, 
+    #     project.name, 
+    #     f"项目产出了{project.intellectual_property}等知识产权成果", 
+    # )
     # 在prompt中添加专利成果强调
-    prompt = f"{prompt}\n\n特别注意：请在验收报告中重点体现项目的专利成果，包括以下专利详细信息：\n{project.patent_info}\n请重点突出项目的专利成果和技术价值，以及这些成果对项目目标实现的贡献。" \
-             f"仅项目概况可以包含专利名称，其他部分不要包含专利名称或编号。内容不准包含日期"
+    prompt = PROJECT_ACCEPTANCE_PROMPT.replace("{company_name}", project.company.name)
+    prompt = prompt.replace("{project_name}", project.name)
+    prompt = prompt.replace("{core_technologies}", project.intellectual_property)
+
+    # 在prompt中添加专利成果强调
+    prompt = f"{prompt}\n\n特别注意：该项目产出了如下知识产权成果，专利详细信息有：\n{project.patent_info}\n请重点突出专利成果的技术价值和创新点，但不要直接引用名字。"\
+             f"仅项目概况可以包含专利名称，其他部分不要包含专利名称或编号。内容不准包含日期"\
+             f"注意因果，专利成果是该项目的产出，所以你不能说‘根据公司现有技术’"\
+             f"此外，核心技术点要与立项报告的项目目标一一对应。"\
+             f"立项报告的项目目标如下："\
+             f'{project.report["项目目标"]}'\
+             f"项目概况包含的知识产权成果需要带有编号"\
+             f"内容量与模版相当。"
     
     # 调用LLM生成验收报告
     response = call_llm(prompt)

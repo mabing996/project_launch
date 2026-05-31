@@ -41,7 +41,11 @@ class Project:
     challenges: List[str] = field(default_factory=list)  # 面临挑战
     budget: str = ""  # 项目预算
     team_members: List[str] = field(default_factory=list)  # 项目团队成员
+    report: dict = field(default_factory=dict)  # 项目立项报告结构化数据
+    notification: dict = field(default_factory=dict)  # 项目通知结构化数据
+    acceptance_report: dict = field(default_factory=dict)  # 项目验收报告结构化数据
     
+
     def generate_project_report(self) -> str:
         """
         生成项目立项报告

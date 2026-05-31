@@ -1,7 +1,7 @@
 import streamlit as st
 from src.llm import call_llm
 from src.pipeline import Solver, pipeline
-
+import json
 # 初始化session_state
 if 'project_data' not in st.session_state:
     st.session_state.project_data = None
@@ -146,14 +146,15 @@ if st.session_state.project_data:
                 "session_id": project_data.session_id
             }
             
-            # with open("project_data.json", "w", encoding="utf-8") as f:
-            #     json.dump(project_data_dict, f, ensure_ascii=False, indent=2)
+            with open("project_data.json", "w", encoding="utf-8") as f:
+                json.dump(project_data_dict, f, ensure_ascii=False, indent=2)
             
             # st.success("详细信息已提交并保存到项目中！项目数据已保存到本地文件 project_data.json")
             # 显示提交的详细信息
             # for item in project_details:
             #     st.write(f"项目{item['项目序号']}的详细信息: {item['详细信息']}")
             # 导入必要的模块
+            1/0
             import time
             import threading
             import queue

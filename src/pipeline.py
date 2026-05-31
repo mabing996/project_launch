@@ -1,3 +1,4 @@
+from colorsys import yiq_to_rgb
 from this import d
 import uuid
 
@@ -49,8 +50,7 @@ def pipeline(project_data_dict):
     """
 
     # 读取project_data.json文件
-    # with open("/Users/swh/project_launch/project_data.json", "r", encoding="utf-8") as f:
-    #     project_data_dict = json.load(f)
+
     
     # 创建Company对象
     company = Company(
@@ -101,7 +101,8 @@ def _pipeline(company):
     
     # 指定进程数量（例如：使用CPU核心数的一半）
     cpu_count = os.cpu_count()
-    max_workers = max(1, cpu_count // 2)
+    # max_workers = max(1, cpu_count // 2)
+    max_workers = 3
     print(f'cpu_count : {cpu_count}')
     
     # 创建带重试机制的项目处理函数
@@ -111,6 +112,10 @@ def _pipeline(company):
     project_reports = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         project_reports = list(executor.map(process_with_retry, company.projects))
+
+    # for project in company.projects:
+    #     doc_path = process_with_retry(project)
+    #     project_reports.append(doc_path)
 
     return project_reports
 
@@ -126,10 +131,37 @@ def process_one_project(project: Project) -> dict:
         项目报告结构化数据
     """
     project_report = generate_project_report(project)
+    project.report = project_report
     project_notification = generate_project_notification(project)
+    project.notification = project_notification
     project_acceptance_report = generate_project_acceptance_report(project)
+    project.acceptance_report = project_acceptance_report
 
-    doc_template_path = './assets/索屿-专审材料/RD/高精准金型模具的研发.docx'
+
+    gen_final_docx(project)
+
+
+def print_runs(runs):
+
+    for idx, run in enumerate(runs):
+        print(f'run {idx}: {run.text}')
+
+
+def gen_final_docx(project):
+        # 保存生成的三个报告用于测试
+    # with open(f'./assets/test_report.json', 'w', encoding='utf-8') as f:
+    #     json.dump(project.report, f, ensure_ascii=False, indent=4)
+    # with open(f'./assets/test_notification.json', 'w', encoding='utf-8') as f:
+    #     json.dump(project.notification, f, ensure_ascii=False, indent=4)
+    # with open(f'./assets/test_acceptance_report.json', 'w', encoding='utf-8') as f:
+    #     json.dump(project.acceptance_report, f, ensure_ascii=False, indent=4)
+
+    project_report = project.report
+    project_notification = project.notification
+    project_acceptance_report = project.acceptance_report
+
+
+    doc_template_path = './assets/templates/1.docx'
 
     from docx import Document
     doc = Document(doc_template_path)
@@ -155,114 +187,145 @@ def process_one_project(project: Project) -> dict:
     # doc.paragraphs[7].text = doc.paragraphs[7].text.replace('汪永太', '')
     doc.paragraphs[7].runs[2].text = ''
     # 替换项目起止时间
-    # doc.paragraphs[8].text = doc.paragraphs[8].text.replace('2024年01月至2024年12月', f'{project.start_date}至{project.end_date}')
-    # 替换编制日期
+    start_year = project.start_date.split('.')[0]
+    start_month = project.start_date.split('.')[1].zfill(2)
 
-    # doc.paragraphs[14].text = doc.paragraphs[14].text.replace('2024年01月04日', '')
-    # # 替换立项通知中的项目名称
-    # doc.paragraphs[54].text = doc.paragraphs[54].text.replace('高精准金型模具的研发', project.name)
-    # # 替换立项通知中的项目负责人
-    # doc.paragraphs[55].text = doc.paragraphs[55].text.replace('汪永太', '')
-    # # 替换立项通知中的项目周期
-    # doc.paragraphs[57].text = doc.paragraphs[57].text.replace('2024年01月04日至2024年12月31日', f'{project.start_date}至{project.end_date}')
+    doc.paragraphs[8].runs[1].text = doc.paragraphs[8].runs[1].text.replace('2024', start_year)
+    doc.paragraphs[8].runs[3].text = doc.paragraphs[8].runs[3].text.replace('01', start_month)
+    end_year = project.end_date.split('.')[0]
+    end_month = project.end_date.split('.')[1].zfill(2)
+    doc.paragraphs[8].runs[5].text = doc.paragraphs[8].runs[5].text.replace('2024', end_year)
+    doc.paragraphs[8].runs[7].text = doc.paragraphs[8].runs[7].text.replace('12', end_month)
+
+    doc.paragraphs[14].runs[1].text = doc.paragraphs[14].runs[1].text.replace('2024', start_year)
+    doc.paragraphs[14].runs[3].text = doc.paragraphs[14].runs[3].text.replace('01', start_month)
+
+    # 项目背景
+  
+    doc.paragraphs[19].runs[0].text = project_report['项目背景'][0].strip('。.')
+
+    doc.paragraphs[20].runs[0].text = project_report['项目背景'][1]
+    if not doc.paragraphs[20].runs[0].text.endswith('。'):
+        doc.paragraphs[20].runs[0].text += '。'
+
+    doc.paragraphs[21].runs[0].text = project_report['项目背景'][2].strip('。.')
+
+    doc.paragraphs[23].text = project_report['项目目标']['目标简介']
+
+    for target_idx in range(4):
+        doc.paragraphs[24 + target_idx].runs[0].text = project_report['项目目标']['目标列表'][target_idx]
+
+
+    # 预期效益
+    doc.paragraphs[30].text = project_report['预期效益与挑战']['预期效益']['经济效益']
+    doc.paragraphs[31].text = project_report['预期效益与挑战']['预期效益']['社会效益']
+    doc.paragraphs[32].text = project_report['预期效益与挑战']['预期效益']['技术效益']
+
+
+    # 面临的挑战
+    doc.paragraphs[34].text = project_report['预期效益与挑战']['面临的挑战'][0]
+    doc.paragraphs[35].text = project_report['预期效益与挑战']['面临的挑战'][1]
+    doc.paragraphs[36].text = project_report['预期效益与挑战']['面临的挑战'][2]
+    doc.paragraphs[37].text = project_report['预期效益与挑战']['面临的挑战'][3]
+
+
+    doc.paragraphs[39].runs[0].text = project.company.name
+
     
-    # 替换项目背景部分
-    doc.paragraphs[21].text = project_report['项目背景']['国内背景']
+    doc.paragraphs[40].runs[0].text = start_year
 
-    # 国际背景 
-    # internation_bg = project_report['项目背景']['国际背景']
-    # internation_bgs = internation_bg.split('；')
-    # internation_bgs = [bg.strip() for bg in internation_bgs]
 
-    doc.paragraphs[23].text = project_report['项目背景']['国际背景'][0]
-    doc.paragraphs[24].text = project_report['项目背景']['国际背景'][1]
-    doc.paragraphs[25].text = project_report['项目背景']['国际背景'][2]
-    doc.paragraphs[26].text = project_report['项目背景']['国际背景'][3]
+    doc.paragraphs[40].runs[2].text = start_month[0]
+    doc.paragraphs[40].runs[3].text = start_month[1]
 
 
 
+    doc.paragraphs[43].runs[0].text = project_notification['通知正文']
+    # 立项通知
+    doc.paragraphs[46].runs[1].text = ''
 
+    doc.paragraphs[47].runs[1].text = start_year
+    doc.paragraphs[47].runs[3].text = start_month[0]
+    doc.paragraphs[47].runs[4].text = start_month[1]
 
-    doc.paragraphs[28].text = project_report['项目背景']['背景总结']
+    doc.paragraphs[48].runs[0].text = '项目名称：' + project.name
     
-    # 替换项目目标部分
-    # doc.paragraphs[29].text = '本项目聚焦于' + project.name + '的研发，重点突破相关关键技术，实现以下技术目标：'
-    # for i, objective in enumerate(project_report['项目目标'], 30):
-    #     doc.paragraphs[i].text = objective
+    doc.paragraphs[49].runs[1].text = ""
 
-    doc.paragraphs[30].text = project_report['项目目标'][0]
-    doc.paragraphs[31].text = project_report['项目目标'][1]
-    doc.paragraphs[32].text = project_report['项目目标'][2]
-    doc.paragraphs[33].text = project_report['项目目标'][3]
-    doc.paragraphs[34].text = project_report['项目目标'][4]
-    
+    doc.paragraphs[50].runs[1].text = ""
 
+    doc.paragraphs[51].runs[1].text = start_year
+    doc.paragraphs[51].runs[3].text = start_month[0]
+    doc.paragraphs[51].runs[4].text = start_month[1]
 
-    # 替换预期效益与挑战部分
-    doc.paragraphs[37].text = '经济效益：' + project_report['预期效益与挑战']['预期效益']['经济效益']
-    doc.paragraphs[38].text = '社会效益：' + project_report['预期效益与挑战']['预期效益']['社会效益']
-    doc.paragraphs[39].text = '技术效益：' + project_report['预期效益与挑战']['预期效益']['技术效益']
-    
-    doc.paragraphs[41].text = project_report['预期效益与挑战']['面临的挑战'][0]
-    doc.paragraphs[42].text = project_report['预期效益与挑战']['面临的挑战'][1]
-    doc.paragraphs[43].text = project_report['预期效益与挑战']['面临的挑战'][2]
-    
-    # for i, challenge in enumerate(project_report['预期效益与挑战']['面临的挑战'], 40):
-    #     doc.paragraphs[i].text = challenge
-    if project_report['预期效益与挑战']['项目预算'].startswith('项目预算'):
-        doc.paragraphs[44].text = project_report['预期效益与挑战']['项目预算']
-    else:
-        doc.paragraphs[44].text = '项目预算：' + project_report['预期效益与挑战']['项目预算']
-    
-    doc.paragraphs[46].text = project.company.name
-
-    # doc.paragraphs[46].text = 
+    doc.paragraphs[51].runs[6].text = end_year
+    doc.paragraphs[51].runs[8].text = end_month[1]
 
 
-    # 替换立项通知部分
-    doc.paragraphs[50].text = project_notification['通知正文']
-    doc.paragraphs[53].text = doc.paragraphs[53].text.replace('SOYU202403', '')
 
-    doc.paragraphs[54].text = doc.paragraphs[54].text.replace('2024年01月04日', '')
+    doc.paragraphs[59].runs[0].text = project.company.name
 
 
-    doc.paragraphs[55].text = '项目名称：' + project.name
-    doc.paragraphs[56].text = '项目负责人：'
-    # doc.paragraphs[56].text = '项目团队：' + ', '.join(project_notification['项目信息']['项目团队'])
-    # doc.paragraphs[57].text = '项目周期：' + project_notification['项目信息']['项目周期']
-    # doc.paragraphs[58].text = '项目预算：' + project_notification['项目信息']['项目预算']
-    doc.paragraphs[57].text = '项目团队：'
-    doc.paragraphs[58].text = '项目周期：'
-    doc.paragraphs[59].text = '项目预算：' + project_notification['项目信息']['项目预算']
+    doc.paragraphs[60].runs[0].text = start_year
+    doc.paragraphs[60].runs[2].text = start_month[0]
+    doc.paragraphs[60].runs[3].text = start_month[1]
 
 
-    doc.paragraphs[66].text = project.company.name
 
-    # for i, requirement in enumerate(project_notification['工作要求'], 60):
-    #     doc.paragraphs[i].text = requirement
-    # doc.paragraphs[63].text = project_notification['结尾语']
-    
     # 替换验收报告部分
-    doc.paragraphs[70].text = project_acceptance_report['项目概况']
-    doc.paragraphs[72].text = project_acceptance_report['项目目标与完成情况']
-    for i, tech_point in enumerate(project_acceptance_report['项目核心技术点与创新点']['核心技术点'], 75):
+    doc.paragraphs[63].text = project_acceptance_report['项目概况']
+    doc.paragraphs[65].text = project_acceptance_report['项目目标与完成情况']
+    for i, tech_point in enumerate(project_acceptance_report['项目核心技术点与创新点']['核心技术点'], 68):
         doc.paragraphs[i].text = tech_point
-    for i, innovation in enumerate(project_acceptance_report['项目核心技术点与创新点']['创新点'], 80):
+    for i, innovation in enumerate(project_acceptance_report['项目核心技术点与创新点']['创新点'], 75):
         doc.paragraphs[i].text = innovation
-    for i, content in enumerate(project_acceptance_report['项目验收情况']['验收内容'], 87):
-        doc.paragraphs[i].text = content
-    doc.paragraphs[91].text = project_acceptance_report['项目验收情况']['验收结论']
+
+    doc.paragraphs[82].text = project_acceptance_report['项目验收情况']['验收内容']['验收简介']
+
+    doc.paragraphs[85].text = "验收方式：" +project_acceptance_report['项目验收情况']['验收内容']['知识产权验收']['验收方式']
+
+    doc.paragraphs[86].text = "验收成果：" +project_acceptance_report['项目验收情况']['验收内容']['知识产权验收']['验收成果']
+
+    # 修改验收内容
+
+    start_idx = 3
+
+    while start_idx < 15:
+        x = start_idx // 3 -1
+        y = start_idx % 3
+
+        key = None
+        if y == 0:
+            key = f'核心指标项{x+1}'
+        elif y == 1:
+            key = '目标值/验收值'
+        elif y == 2:
+            key = '实测效果描述'
+
+        doc.tables[1]._cells[start_idx].text = project_acceptance_report['项目验收情况']['验收内容']['核心技术指标达成情况验收'][x][key]
+        
+        start_idx += 1
+
+
+
+    doc.paragraphs[88].text = project_acceptance_report['项目验收情况']['验收结论']
     
 
-    doc.paragraphs[93].text = project.company.name
+    doc.paragraphs[90].text = project.company.name
+
+    doc.paragraphs[91].runs[0].text = end_year
+    doc.paragraphs[91].runs[2].text = end_month
+
 
     # 修改眉页
     # 访问文档的页眉
     header = doc.sections[0].header
     # 遍历页眉中的段落，替换公司名称
     for paragraph in header.paragraphs:
-        if '上海索屿智能科技有限公司' in paragraph.text:
-            paragraph.text = paragraph.text.replace('上海索屿智能科技有限公司', project.company.name)
+        if '上海骧和信息技术有限公司' in paragraph.text:
+            paragraph.text = paragraph.text.replace('上海骧和信息技术有限公司', project.company.name)
+
+
 
     # 保存修改后的文档
     import datetime
