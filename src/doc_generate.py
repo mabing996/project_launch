@@ -43,7 +43,7 @@ def generate_project_report(
     prompt = f"{prompt}\n\n特别注意：请在报告中重点体现项目的专利成果，包括以下专利详细信息：\n{project.patent_info}\n请重点突出专利成果的技术价值和创新点，但不要直接引用名字。"\
              f"内容不要包含专利名称或编号，也不准包含日期"\
              f"注意因果，专利成果是该项目的产出，所以你不能说‘根据公司现有技术’"\
-             f"内容量与模版相当。"
+             f"内容量与模版相当。双引号等符号要用中文符号。"
     # 调用LLM生成报告
     response = call_llm(prompt)
     
@@ -88,7 +88,7 @@ def generate_project_notification(
     prompt = f"{prompt}\n\n特别注意：该项目产出了如下知识产权成果，专利详细信息有：\n{project.patent_info}\n请重点突出专利成果的技术价值和创新点，但不要直接引用名字。"\
              f"内容不要包含专利名称或编号，也不准包含日期"\
              f"注意因果，专利成果是该项目的产出，所以你不能说‘根据公司现有技术’"\
-             f"内容量与模版相当。"
+             f"内容量与模版相当。双引号等符号要用中文符号。"
     
     # 调用LLM生成通知
     response = call_llm(prompt)
@@ -140,7 +140,7 @@ def generate_project_acceptance_report(
              f"立项报告的项目目标如下："\
              f'{project.report["项目目标"]}'\
              f"项目概况包含的知识产权成果需要带有编号"\
-             f"内容量与模版相当。"
+             f"内容量与模版相当。双引号等符号要用中文符号。"
     
     # 调用LLM生成验收报告
     response = call_llm(prompt)
