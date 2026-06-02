@@ -102,7 +102,7 @@ def _pipeline(company):
     # 指定进程数量（例如：使用CPU核心数的一半）
     cpu_count = os.cpu_count()
     # max_workers = max(1, cpu_count // 2)
-    max_workers = 3
+    max_workers = 4
     print(f'cpu_count : {cpu_count}')
     
     # 创建带重试机制的项目处理函数
