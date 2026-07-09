@@ -10,9 +10,9 @@
     - 定时执行策略
 """
 
-from quant.scheduler import TaskScheduler
-from quant.tasks.high_open_2pct import HighOpen2PctTask
-from quant.tasks.daily_data_download import DailyDataDownloadTask
+from scheduler import TaskScheduler
+from tasks.high_open_2pct import HighOpen2PctTask
+from tasks.daily_data_download import DailyDataDownloadTask
 
 
 def main():
