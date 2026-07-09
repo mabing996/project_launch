@@ -24,7 +24,7 @@ def main():
     
     # 添加策略任务
     tasks = [
-        HighOpen2PctTask(),
+        # HighOpen2PctTask(),
         DailyDataDownloadTask(),
     ]
     
