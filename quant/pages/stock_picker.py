@@ -177,13 +177,14 @@ def main():
                         
                         result_df = pd.DataFrame({
                             '股票代码': [code for code in result],
+                            '同花顺': [f'[查看](https://stockpage.10jqka.com.cn/{code.split(".")[0]}/)' for code in result],
                             '最新日期': [stock_data[code].index[-1].strftime('%Y-%m-%d') if not stock_data[code].empty else '' for code in result],
                             '最新价': [stock_data[code]['close'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
                             '涨跌幅(%)': [stock_data[code]['pct_chg'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
                             '成交量(手)': [stock_data[code]['volume'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
                         })
                         
-                        st.dataframe(result_df, use_container_width=True)
+                        st.markdown(result_df.to_markdown(index=False), unsafe_allow_html=True)
                         
                         csv = result_df.to_csv(index=False)
                         st.download_button(
