@@ -1,0 +1,13 @@
+{
+  "date": "2026-07-09",
+  "time": "2026-07-09 22:20:17",
+  "task_name": "每日数据下载任务",
+  "download_days": 100,
+  "keep_days": 3,
+  "success_dates": 67,
+  "fail_dates": 33,
+  "total_stocks": 5540,
+  "total_records": 368581,
+  "data_path": "/Users/swh/project_launch/quant/data/daily_data.pkl",
+  "backup_path": "/Users/swh/project_launch/quant/data/daily_data_backup.pkl"
+}
