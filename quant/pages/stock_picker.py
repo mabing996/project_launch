@@ -178,6 +178,7 @@ def main():
                         result_df = pd.DataFrame({
                             '股票代码': [code for code in result],
                             '同花顺': [f'[查看](https://stockpage.10jqka.com.cn/{code.split(".")[0]}/)' for code in result],
+                            '换手率(%)': [stock_data[code]['turnover_rate'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
                             '最新日期': [stock_data[code].index[-1].strftime('%Y-%m-%d') if not stock_data[code].empty else '' for code in result],
                             '最新价': [stock_data[code]['close'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
                             '涨跌幅(%)': [stock_data[code]['pct_chg'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
