@@ -235,6 +235,11 @@ def main():
                             '成交量(手)': [stock_data[code]['volume'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
                         })
                         
+                        numeric_cols = ['换手率(%)', 'PE', 'PE_TTM', 'PB', '总市值(亿)', '最新价', '涨跌幅(%)', '成交量(手)']
+                        for col in numeric_cols:
+                            if col in result_df.columns:
+                                result_df[col] = result_df[col].round(2)
+                        
                         header_html = ''.join(f'<th>{col}</th>' for col in result_df.columns)
                         rows_html = []
                         for _, row in result_df.iterrows():
