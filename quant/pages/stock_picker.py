@@ -73,7 +73,8 @@ def execute_code(code, stock_data):
         get_stock_codes,
         add_exchange_prefix,
         add_exchange_suffix,
-        get_limit_type
+        get_limit_type,
+        get_basic_info_pro
     )
     from Ashare import get_price
     
@@ -89,6 +90,7 @@ def execute_code(code, stock_data):
         'add_exchange_prefix': add_exchange_prefix,
         'add_exchange_suffix': add_exchange_suffix,
         'get_limit_type': get_limit_type,
+        'get_basic_info_pro': get_basic_info_pro,
         'get_price': get_price,
     }
     
@@ -142,6 +144,7 @@ def main():
     | `get_price_pro(code, start_date, end_date)` | tushare日线数据 |
     | `get_stk_factor_pro(ts_code/trade_date, ...)` | tushare因子数据(带复权) |
     | `get_price(code, end_date='', count=10, frequency='1d')` | Ashare行情接口 |
+    | `get_basic_info_pro(stock_code, trade_date)` | 获取股票基本信息(名称/行业/PE/PE_TTM/PB/总市值) |
     | `add_exchange_prefix(code)` | 添加交易所前缀(sh_/sz_/bj_) |
     | `add_exchange_suffix(code)` | 添加交易所后缀(.SH/.SZ/.BJ) |
     | `get_limit_type(code)` | 获取涨跌幅限制(10/20/30) |
@@ -175,10 +178,58 @@ def main():
                     if result:
                         st.subheader("选股结果")
                         
+                        from util import get_basic_info_pro
+                        import tushare as ts
+                        pro = ts.pro_api()
+                        
+                        last_date = None
+                        for code in result:
+                            if not stock_data[code].empty:
+                                last_date = stock_data[code].index[-1].strftime('%Y%m%d')
+                                break
+                        
+                        names = []
+                        industries = []
+                        pes = []
+                        pe_ttms = []
+                        pbs = []
+                        total_mvs = []
+                        
+                        if last_date:
+                            for code in result:
+                                try:
+                                    name, industry, pe, pe_ttm, pb, total_mv = get_basic_info_pro(code, last_date)
+                                    names.append(name)
+                                    industries.append(industry)
+                                    pes.append(pe)
+                                    pe_ttms.append(pe_ttm)
+                                    pbs.append(pb)
+                                    total_mvs.append(total_mv)
+                                except Exception as e:
+                                    names.append('')
+                                    industries.append('')
+                                    pes.append(0)
+                                    pe_ttms.append(0)
+                                    pbs.append(0)
+                                    total_mvs.append(0)
+                        else:
+                            names = [''] * len(result)
+                            industries = [''] * len(result)
+                            pes = [0] * len(result)
+                            pe_ttms = [0] * len(result)
+                            pbs = [0] * len(result)
+                            total_mvs = [0] * len(result)
+                        
                         result_df = pd.DataFrame({
                             '股票代码': [code for code in result],
+                            '名称': names,
                             '同花顺': [f'[查看](https://stockpage.10jqka.com.cn/{code.split(".")[0]}/)' for code in result],
+                            '行业': industries,
                             '换手率(%)': [stock_data[code]['turnover_rate'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
+                            'PE': pes,
+                            'PE_TTM': pe_ttms,
+                            'PB': pbs,
+                            '总市值(亿)': [mv / 10000 if mv > 0 else 0 for mv in total_mvs],
                             '最新日期': [stock_data[code].index[-1].strftime('%Y-%m-%d') if not stock_data[code].empty else '' for code in result],
                             '最新价': [stock_data[code]['close'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
                             '涨跌幅(%)': [stock_data[code]['pct_chg'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
