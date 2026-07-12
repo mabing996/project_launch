@@ -1,3 +1,5 @@
 myvenv/
 assets/docs/
 assets/images/
+quant/data/
+quant/logs
