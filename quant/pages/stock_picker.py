@@ -221,9 +221,8 @@ def main():
                         
                         result_df = pd.DataFrame({
                             '股票代码': [code for code in result],
-                            '名称': names,
+                            '名称/行业': [f'{name} ({industry})' if name and industry else (name or industry or '') for name, industry in zip(names, industries)],
                             '同花顺': [f'[查看](https://stockpage.10jqka.com.cn/{code.split(".")[0]}/)' for code in result],
-                            '行业': industries,
                             '换手率(%)': [stock_data[code]['turnover_rate'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
                             'PE': pes,
                             'PE_TTM': pe_ttms,
