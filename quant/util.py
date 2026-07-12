@@ -2,6 +2,9 @@ import akshare as ak
 import os
 import pickle
 from tqdm import tqdm
+import pandas as pd
+import numpy as np
+
 
 
 pro = None
@@ -268,6 +271,44 @@ def add_exchange_suffix(code: str, sep: str = '.') -> str:
         return f'{code}{sep}SZ'
     else:
         return code
+
+
+def get_rolling_slope_intercept(series, window):
+    x = np.arange(window)
+    sum_x = np.sum(x)
+    sum_x2 = np.sum(x ** 2)
+    n = window
+
+    sum_y = series.rolling(window).sum()
+    # 向量化 xy 和（关键：不使用index，使用天然顺序0~n-1）
+    # sum_xy = (series * np.arange(len(series))).rolling(window).sum()
+    mat = np.lib.stride_tricks.sliding_window_view(series.values, window)
+    # print(f'mat.shape={mat.shape},sum_y.shape={sum_y.shape},x.shape={x.shape}, len(series.values)={len(series.values)}')
+    sum_xy = np.dot(mat, x)
+    sum_xy = np.r_[np.full(n-1, np.nan), sum_xy]
+    
+    # 最小二乘法公式
+    slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x ** 2)
+    intercept = (sum_y - slope * sum_x) / n
+    # return slope, intercept
+
+
+    slope_valid = slope.dropna().values
+    intercept_valid = intercept.dropna().values
+    
+    # 计算拟合值与残差
+    y_pred = slope_valid[:, None] * x + intercept_valid[:, None]
+    residuals = mat - y_pred
+    
+    # 计算 RMSE 和 相对RMSE
+    rmse = np.sqrt(np.mean(residuals**2, axis=1))
+    mean_y = sum_y.dropna() / n
+    rrmse = rmse / mean_y.values
+    
+    # 补回前面的 NaN，保持长度和原序列一致
+    rrmse = pd.Series(np.r_[np.full(n-1, np.nan), rrmse], index=series.index)                 # 对齐索引
+    return pd.Series(slope, index=series.index), pd.Series(intercept, index=series.index), rrmse
+
 
 if __name__ == '__main__':
     stock_codes = get_stock_codes()

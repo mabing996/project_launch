@@ -17,6 +17,11 @@ def test_daily_data():
     task.init_count = 100
     task.execute()
 
+
+
+
+
+
 if __name__ == '__main__':
     # test_high_open()
     test_daily_data()

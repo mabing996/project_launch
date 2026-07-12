@@ -195,7 +195,12 @@ def main():
                         total_mvs = []
                         
                         if last_date:
-                            for code in result:
+                            progress_bar = st.progress(0)
+                            status_text = st.empty()
+                            total = len(result)
+                            
+                            for i, code in enumerate(result):
+                                status_text.text(f"正在获取股票基本信息... ({i+1}/{total})")
                                 try:
                                     name, industry, pe, pe_ttm, pb, total_mv = get_basic_info_pro(code, last_date)
                                     names.append(name)
@@ -211,6 +216,10 @@ def main():
                                     pe_ttms.append(0)
                                     pbs.append(0)
                                     total_mvs.append(0)
+                                progress_bar.progress((i + 1) / total)
+                            
+                            progress_bar.empty()
+                            status_text.empty()
                         else:
                             names = [''] * len(result)
                             industries = [''] * len(result)
@@ -238,7 +247,7 @@ def main():
                         numeric_cols = ['换手率(%)', 'PE', 'PE_TTM', 'PB', '总市值(亿)', '最新价', '涨跌幅(%)', '成交量(手)']
                         for col in numeric_cols:
                             if col in result_df.columns:
-                                result_df[col] = result_df[col].round(2)
+                                result_df[col] = result_df[col].apply(lambda x: round(x, 2) if pd.notna(x) else '')
                         
                         header_html = ''.join(f'<th>{col}</th>' for col in result_df.columns)
                         rows_html = []
