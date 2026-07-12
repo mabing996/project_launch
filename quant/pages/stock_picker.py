@@ -180,7 +180,6 @@ def main():
                         
                         from util import get_basic_info_pro
                         import tushare as ts
-                        pro = ts.pro_api()
                         
                         last_date = None
                         for code in result:
