@@ -221,8 +221,9 @@ def main():
                         
                         result_df = pd.DataFrame({
                             '股票代码': [code for code in result],
-                            '名称/行业': [f'{name} ({industry})' if name and industry else (name or industry or '') for name, industry in zip(names, industries)],
-                            '同花顺': [f'[查看](https://stockpage.10jqka.com.cn/{code.split(".")[0]}/)' for code in result],
+                            '名称': names,
+                            '同花顺': [f'<a href="https://stockpage.10jqka.com.cn/{code.split(".")[0]}/" target="_blank">查看</a>' for code in result],
+                            '行业': industries,
                             '换手率(%)': [stock_data[code]['turnover_rate'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
                             'PE': pes,
                             'PE_TTM': pe_ttms,
@@ -234,7 +235,40 @@ def main():
                             '成交量(手)': [stock_data[code]['volume'].iloc[-1] if not stock_data[code].empty else 0 for code in result],
                         })
                         
-                        st.markdown(result_df.to_markdown(index=False), unsafe_allow_html=True)
+                        header_html = ''.join(f'<th>{col}</th>' for col in result_df.columns)
+                        rows_html = []
+                        for _, row in result_df.iterrows():
+                            cells = ''.join(f'<td>{val}</td>' for val in row)
+                            rows_html.append(f'<tr>{cells}</tr>')
+                        body_html = ''.join(rows_html)
+                        
+                        html_table = f"""
+                        <style>
+                        table {{
+                            width: 100%;
+                            border-collapse: collapse;
+                        }}
+                        th, td {{
+                            padding: 8px 12px;
+                            text-align: left;
+                            border: 1px solid #e5e7eb;
+                            white-space: nowrap;
+                        }}
+                        th {{
+                            background-color: #f3f4f6;
+                            font-weight: bold;
+                        }}
+                        </style>
+                        <table>
+                        <thead>
+                        <tr>{header_html}</tr>
+                        </thead>
+                        <tbody>
+                        {body_html}
+                        </tbody>
+                        </table>
+                        """
+                        st.markdown(html_table, unsafe_allow_html=True)
                         
                         csv = result_df.to_csv(index=False)
                         st.download_button(
