@@ -26,6 +26,29 @@ def get_price_pro(stock_code: str, start_date: str, end_date: str, adj: str = 'q
     df.sort_values(by='trade_date', inplace=True)
     return df
 
+def get_basic_info_pro(stock_code: str, last_trade_date: str):
+    """
+    获取股票的基本信息（名称、行业、PE、PE_TTM、PB、总市值）
+    
+    Args:
+        stock_code: 股票代码，格式如 '603629.SH'
+        last_trade_date: 最近交易日期（不是当天，格式为yyyyMMdd，例如20260710）
+    
+    Returns:
+        包含股票基本信息的元组，顺序为：(名称, 行业, PE, PE_TTM, PB, 总市值)
+
+    """
+
+    df = pro.query('stock_basic', ts_code=stock_code, list_status='L', fields='name,industry')
+    name = df.iloc[0]['name']
+    industry = df.iloc[0]['industry']
+    df = pro.daily_basic(ts_code=stock_code, trade_date=last_trade_date, fields='ts_code,trade_date,turnover_rate,volume_ratio,pe,pe_ttm,pb,total_mv')
+    pe = df.iloc[0]['pe']
+    pe_ttm = df.iloc[0]['pe_ttm']
+    pb = df.iloc[0]['pb']
+    total_mv = df.iloc[0]['total_mv']
+    return name, industry, pe, pe_ttm, pb, total_mv 
+
 
 def get_stk_factor_pro(ts_code: str = None, trade_date: str = None, start_date: str = None, end_date: str = None):
     """

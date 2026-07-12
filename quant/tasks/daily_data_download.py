@@ -33,7 +33,7 @@ class DailyDataDownloadTask(BaseTask):
     def __init__(self):
         super().__init__(schedule_time="20:00", task_name="每日数据下载任务")
         
-        self.download_days = 100
+        self.download_days = 200
         self.keep_days = 3
         
         self.data_dir = os.path.join(
