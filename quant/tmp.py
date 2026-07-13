@@ -88,7 +88,7 @@ def pick_stocks(stock_data, day_num_before=0):
         if max_drawdown_10 > 0.1:
             continue
 
-        if max_drawdown_20 > 0.1:
+        if max_drawdown_20 > 0.2:
             continue
         
         max_high = df["high"].max()

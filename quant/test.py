@@ -14,14 +14,20 @@ def test_high_open():
 def test_daily_data():
     from tasks.daily_data_download import DailyDataDownloadTask
     task = DailyDataDownloadTask()
-    task.init_count = 100
+    # task.init_count = 00
     task.execute()
 
-
+def test_get_data():
+    from util import get_stk_factor_pro
+    trade_date = '20260708'
+    df = get_stk_factor_pro(trade_date=trade_date)
+    print(df)
+    # assert not df.empty
 
 
 
 
 if __name__ == '__main__':
+    # test_get_data()
     # test_high_open()
     test_daily_data()
