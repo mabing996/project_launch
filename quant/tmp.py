@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from util import load_local_daily_data,get_limit_type
+from util import load_local_daily_data,get_limit_type,get_basic_info_pro,filter_st_codes,calculate_max_drawdown
 def pick_stocks(stock_data, day_num_before=0):
     """
     选股函数
@@ -17,8 +17,10 @@ def pick_stocks(stock_data, day_num_before=0):
     selected = []
     print(f"总股票数: {len(stock_data)}")
     for code, df in stock_data.items():
+
+
         ori_df = df.copy()
-        if day_num_before < 0:
+        if day_num_before <= 0:
             df = df.copy()
         else:
             df = df.copy().iloc[:-day_num_before]
@@ -43,9 +45,9 @@ def pick_stocks(stock_data, day_num_before=0):
         df['ma10_20'] = df['ma10'] >= df['ma20']
         df['ma5_20'] = df['ma5'] >= df['ma20']
         
-        df['max_drawdown_5'] = round(df['high'].rolling(5).max() / df['close'] - 1, 2)
-        df['max_drawdown_10'] = round(df['high'].rolling(10).max() / df['close'] - 1, 2)
-        df['max_drawdown_20'] = round(df['high'].rolling(20).max() / df['close'] - 1, 2)
+        df['max_drawdown_5'] = calculate_max_drawdown(df['high'], df['low'], window=5)
+        df['max_drawdown_10'] = calculate_max_drawdown(df['high'], df['low'], window=10)
+        df['max_drawdown_20'] = calculate_max_drawdown(df['high'], df['low'], window=20)
 
         EMA_DAY = 20        
         RATIO_THRESH = 0.8  # 占比阈值80%
@@ -68,6 +70,8 @@ def pick_stocks(stock_data, day_num_before=0):
         # 取当日最新滚动占比数值
         ma5_above_ratio = latest["ma5_above_ratio"]
         ma10_above_ratio = latest["ma10_above_ratio"]  
+        max_drawdown_10 = latest["max_drawdown_10"]
+        max_drawdown_20 = latest["max_drawdown_20"]
 
         # 基础均线多头条件
         # if pd.isna(ma5) or pd.isna(ma10) or pd.isna(ma20):
@@ -81,10 +85,15 @@ def pick_stocks(stock_data, day_num_before=0):
             continue
         if close < ma20 or close < ma10:
             continue
+        if max_drawdown_10 > 0.1:
+            continue
+
+        if max_drawdown_20 > 0.1:
+            continue
         
         max_high = df["high"].max()
-        if 1.5 * close >= max_high :
-            continue
+        # if 1.5 * close >= max_high :
+        #     continue
 
         up_ratio = round(max_high / close - 1, 2)
         print(f"选中: {code}, 买入价格{close:.2f}, MA5:{ma5:.2f}, MA10:{ma10:.2f}, MA20:{ma20:.2f}, 历史最高{max_high:.2f}, 最新价格:{ori_df.iloc[-1]['close']:.2f} up_ratio:{up_ratio:.2f}")
@@ -95,11 +104,21 @@ def pick_stocks(stock_data, day_num_before=0):
 
 if __name__ == '__main__':
     stock_data = load_local_daily_data()
-    # selected = pick_stocks(stock_data, day_num_before=10)
+    day = 0
+    selected = pick_stocks(stock_data, day_num_before=day)
     tmp_codes = stock_data['603629.SH']
-    for day in range(10, 21):
-        selected = pick_stocks(stock_data, day_num_before=day)
-        date = tmp_codes.iloc[-(day+1)].name
-        print(f"day={day}, 选中股票数: {len(selected)}, 日期: {date}")
+    last_date = tmp_codes.iloc[-1].name
+    last_date = last_date.strftime('%Y%m%d')
+    for code in selected:
+        name, industry, pe, pe_ttm, pb, total_mv = get_basic_info_pro(code, last_date)
+        print(f"{code}, {name}, {industry}, {pe}, {pe_ttm}, {pb}, {total_mv}")
+    print(f'last_date={last_date}')
+    # print(selected)
+    # selected = pick_stocks(stock_data, day_num_before=10)
+    # tmp_codes = stock_data['603629.SH']
+    # for day in range(10, 21):
+    #     selected = pick_stocks(stock_data, day_num_before=day)
+    #     date = tmp_codes.iloc[-(day+1)].name
+    #     print(f"day={day}, 选中股票数: {len(selected)}, 日期: {date}")
 
     print('done')

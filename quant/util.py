@@ -310,6 +310,58 @@ def get_rolling_slope_intercept(series, window):
     return pd.Series(slope, index=series.index), pd.Series(intercept, index=series.index), rrmse
 
 
+def calculate_max_drawdown(high_series, low_series=None, close_series=None, window=None):
+    """
+    计算最大回撤率，逻辑：
+    1. 找到窗口期内最高价格的日期（price_max_day）
+    2. 寻找 price_max_day+1 到当前日期的最小值
+    3. 计算 (最高价 - 最低价) / 最高价 = 最大回撤率
+    
+    Args:
+        high_series: 最高价序列（pd.Series）
+        low_series: 最低价序列（pd.Series），如果为None则使用close_series
+        close_series: 收盘价序列（pd.Series），当low_series为None时使用
+        window: 滚动窗口大小，如果为None则计算从序列开始到当前的最大回撤
+    
+    Returns:
+        pd.Series，包含最大回撤率，正值表示回撤幅度（如0.15表示回撤15%）
+    """
+    if low_series is None:
+        low_series = close_series if close_series is not None else high_series
+    
+    if window is None:
+        window = len(high_series)
+    
+    max_drawdown = []
+    
+    for i in range(len(high_series)):
+        start_idx = max(0, i - window + 1)
+        window_high = high_series.iloc[start_idx:i+1]
+        window_low = low_series.iloc[start_idx:i+1]
+        
+        if len(window_high) < 2:
+            max_drawdown.append(np.nan)
+            continue
+        
+        max_high_idx = window_high.idxmax()
+        max_high_value = window_high[max_high_idx]
+        
+        max_high_pos = window_high.index.get_loc(max_high_idx)
+        
+        if max_high_pos == len(window_high) - 1:
+            max_drawdown.append(0.0)
+        else:
+            subsequent_lows = window_low.iloc[max_high_pos + 1:]
+            if len(subsequent_lows) == 0:
+                max_drawdown.append(0.0)
+            else:
+                min_low_value = subsequent_lows.min()
+                drawdown = (max_high_value - min_low_value) / max_high_value
+                max_drawdown.append(drawdown)
+    
+    return pd.Series(max_drawdown, index=high_series.index)
+
+
 if __name__ == '__main__':
     stock_codes = get_stock_codes()
     print(stock_codes)
