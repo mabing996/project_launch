@@ -74,7 +74,8 @@ def execute_code(code, stock_data):
         add_exchange_prefix,
         add_exchange_suffix,
         get_limit_type,
-        get_basic_info_pro
+        get_basic_info_pro,
+        calculate_max_drawdown
     )
     from Ashare import get_price
     
@@ -92,6 +93,7 @@ def execute_code(code, stock_data):
         'get_limit_type': get_limit_type,
         'get_basic_info_pro': get_basic_info_pro,
         'get_price': get_price,
+        'calculate_max_drawdown': calculate_max_drawdown
     }
     
     old_stdout = sys.stdout
